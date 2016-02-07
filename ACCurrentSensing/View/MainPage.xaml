@@ -1,0 +1,173 @@
+﻿<Page
+    x:Class="ACCurrentSensing.View.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ACCurrentSensing"
+    xmlns:view="using:ACCurrentSensing.View"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:i="using:Microsoft.Xaml.Interactivity"
+    xmlns:ic="using:Microsoft.Xaml.Interactions.Core"
+    xmlns:viewModel="using:ACCurrentSensing.ViewModel"
+    xmlns:behavior="using:ACCurrentSensing.View.Behaviors"
+    xmlns:oxy="using:OxyPlot.Windows"
+    mc:Ignorable="d">
+    
+    <Page.Resources>
+        <view:StringFormatConverter x:Name="StringFormatConverter"/>
+        <view:BooleanToVisibilityConverter x:Name="BoolToVisibilityConverter"/>
+        <Style TargetType="TextBlock">
+            <Setter Property="Margin" Value="2"/>
+        </Style>
+    </Page.Resources>
+    <Page.DataContext>
+        <!-- ViewModelを設定 -->
+        <viewModel:MainViewModel/>
+    </Page.DataContext>
+    <i:Interaction.Behaviors>
+        <behavior:DisposeDataContextBehavior/>
+    </i:Interaction.Behaviors>
+    <Grid x:Name="MainGrid" 
+          Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <Grid x:Name="UsageTextBlock"
+              Grid.Row="0"
+              Grid.Column="0" Grid.ColumnSpan="2"
+              Margin="1,3"
+              Background="CornflowerBlue">
+            <TextBlock>
+                <Run>Total/Capacity: </Run>
+                <Run Text="{Binding TotalCurrent.Value, Converter={StaticResource StringFormatConverter}, ConverterParameter=F1}"/>
+                <Run>/</Run>
+                <Run Text="{Binding Capacity.Value}"/>
+                <Run> (</Run>
+                <Run Text="{Binding Usage.Value, Converter={StaticResource StringFormatConverter}, ConverterParameter=P0}"/>
+                <Run>)</Run>
+            </TextBlock>
+            <i:Interaction.Behaviors>
+                <ic:DataTriggerBehavior Binding="{Binding AlertState.Value}" Value="NormalAlertState" ComparisonCondition="Equal">
+                    <ic:ChangePropertyAction PropertyName="Background" Value="CornflowerBlue"/>
+                </ic:DataTriggerBehavior>
+                <ic:DataTriggerBehavior Binding="{Binding AlertState.Value}" Value="WarningAlertState" ComparisonCondition="Equal">
+                    <ic:ChangePropertyAction PropertyName="Background" Value="DarkGoldenrod"/>
+                </ic:DataTriggerBehavior>
+                <ic:DataTriggerBehavior Binding="{Binding AlertState.Value}" Value="ErrorAlertState" ComparisonCondition="Equal">
+                    <ic:ChangePropertyAction PropertyName="Background" Value="DarkRed"/>
+                </ic:DataTriggerBehavior>
+            </i:Interaction.Behaviors>
+        </Grid>
+
+        <ListBox Grid.Row="1" Grid.RowSpan="3" Grid.Column="0" ItemsSource="{Binding PlotTypeValues}" SelectedItem="{Binding CurrentPlotType.Value, Mode=TwoWay}"/>
+        
+        <!-- Custom history plot period -->
+        <Grid Grid.Row="1" Grid.Column="1" Visibility="{Binding IsCustom.Value, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Column="0"  Grid.Row="0" Text="From:"/>
+            <DatePicker Grid.Column="1" Grid.Row="0" Date="{Binding PlotFromDate.Value, Mode=TwoWay}"/>
+            <TimePicker Grid.Column="2" Grid.Row="0" Time="{Binding PlotFromTime.Value, Mode=TwoWay}"/>
+            <TextBlock Grid.Column="0" Grid.Row="1" Text="To:"/>
+            <DatePicker Grid.Column="1" Grid.Row="1" Date="{Binding PlotToDate.Value, Mode=TwoWay}"/>
+            <TimePicker Grid.Column="2" Grid.Row="1" Time="{Binding PlotToTime.Value, Mode=TwoWay}"/>
+            <Button Grid.Column="3" Grid.Row="0" Grid.RowSpan="2" Margin="4" Padding="2"
+                    Command="{Binding UpdatePlotPeriodCommand}">Update</Button>
+        </Grid>
+        
+        <!-- Accumulated Currents -->
+        <TextBlock Grid.Row="2" Grid.Column="1"  Visibility="{Binding IsHistroy.Value, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Run>Accumulated: </Run>
+            <Run Text="{Binding AccumulatedCurrent.Value, Converter={StaticResource StringFormatConverter}, ConverterParameter=F2}"/>
+            <Run> [Ah]</Run>
+        </TextBlock>
+        
+        <!-- OxyPlotを用いた時系列グラフ表示 -->
+        <oxy:PlotView Grid.Row="3" Grid.Column="1" Model="{Binding CurrentPlotModel}" Background="{Binding PlotBackground.Value}" Foreground="{Binding PlotForeground.Value}"/>
+
+        <!-- Current sensors -->
+        <ItemsControl 
+            Grid.Row="4" 
+            Grid.Column="0" Grid.ColumnSpan="2"
+            ItemsSource="{Binding CurrentSensors}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapGrid Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="Gray" BorderThickness="1">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="{Binding Name.Value}"/>
+                            <TextBlock Grid.Row="1">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="Disconnected"/>
+                                    </Style>
+                                </TextBlock.Style>
+                                <i:Interaction.Behaviors>
+                                    <ic:DataTriggerBehavior Binding="{Binding IsConnected.Value}" Value="true" ComparisonCondition="Equal">
+                                        <ic:ChangePropertyAction PropertyName="Text" Value="Connected"/>
+                                    </ic:DataTriggerBehavior>
+                                </i:Interaction.Behaviors>
+                            </TextBlock>
+                            <TextBlock Grid.Row="2" Visibility="{Binding IsConnected.Value, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <Run>Current:</Run>
+                                <Run Text="{Binding Path=Current.Value, Converter={StaticResource StringFormatConverter}, ConverterParameter=F1}"/>
+                            </TextBlock>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+            <ItemsControl.ItemContainerStyle>
+                <Style TargetType="ContentPresenter">
+                    <Setter Property="Width" Value="200"/>
+                    <Setter Property="Height" Value="64"/>
+                </Style>
+            </ItemsControl.ItemContainerStyle>
+        </ItemsControl>
+    </Grid>
+
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Label="Manage Sensors" Icon="Manage">
+                <i:Interaction.Behaviors>
+                    <ic:EventTriggerBehavior EventName="Click">
+                        <ic:NavigateToPageAction TargetPage="ACCurrentSensing.View.SensorListPage"/>
+                    </ic:EventTriggerBehavior>
+                </i:Interaction.Behaviors>
+            </AppBarButton>
+            <AppBarButton Label="View Settings" Icon="Setting">
+                <i:Interaction.Behaviors>
+                    <ic:EventTriggerBehavior EventName="Click">
+                        <ic:NavigateToPageAction TargetPage="ACCurrentSensing.View.ViewSettingsPage"/>
+                    </ic:EventTriggerBehavior>
+                </i:Interaction.Behaviors>
+            </AppBarButton>
+        </CommandBar>
+    </Page.BottomAppBar>
+</Page>

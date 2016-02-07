@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  IgnorableNamespaces="uap mp">
+
+  <Identity
+    Name="09837289-ac75-416b-84f3-d24ed991695f"
+    Publisher="CN=Kenta"
+    Version="1.0.0.0" />
+
+  <mp:PhoneIdentity PhoneProductId="09837289-ac75-416b-84f3-d24ed991695f" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+
+  <Properties>
+    <DisplayName>ACCurrentSensing</DisplayName>
+    <PublisherDisplayName>Kenta</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="x-generate"/>
+  </Resources>
+
+  <Applications>
+    <Application Id="App"
+      Executable="$targetnametoken$.exe"
+      EntryPoint="ACCurrentSensing.App">
+      <uap:VisualElements
+        DisplayName="ACCurrentSensing"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png"
+        Description="ACCurrentSensing"
+        BackgroundColor="transparent">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <DeviceCapability Name="bluetooth.genericAttributeProfile">
+      <Device Id="any">
+        <Function Type="serviceId:00000000-0001-0002-0003-0123456789ab"/>
+        <Function Type="name:battery"/>
+        <Function Type="name:genericAccess"/>
+        <Function Type="name:genericAttribute"/>
+        <Function Type="serviceId:0000180A-0000-1000-8000-00805F9B34FB"/>
+      </Device>
+      </DeviceCapability>
+    </Capabilities>
+</Package>
